@@ -7,6 +7,9 @@ if (!databaseUrl) {
 }
 
 export default defineConfig({
+  migrations: {
+    seed: 'ts-node ./prisma/seed.ts',
+  },
   // `datasource` (singular) is required by migrate; keep `datasources` for compatibility
   datasource: {
     url: databaseUrl,

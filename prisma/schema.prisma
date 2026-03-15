@@ -6,12 +6,203 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─── User ───────────────────────────────────────────────
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      String
-  phone     String
-  createdAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  password      String
+  role          String   // "student" | "trainer"
+  phone         String
+  birthdate     DateTime?
+  height        Float?
+  currentWeight Float?
+  targetWeight  Float?
+  startWeight   Float?
+  goal          String?
+  startDate     DateTime?
+  plan          String?
+  status        String   @default("active") // "active" | "inactive"
+  avatar        String?
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  // trainer ↔ student (self-relation)
+  trainerId     Int?
+  trainer       User?    @relation("TrainerStudents", fields: [trainerId], references: [id])
+  students      User[]   @relation("TrainerStudents")
+
+  // relations
+  anamneses       Anamnesis[]
+  assessments     Assessment[]
+  nutritionPlans  NutritionPlan[]
+  diaryEntries    DiaryEntry[]
+  schedules       Schedule[]
+  sentMessages    ChatMessage[]    @relation("SentMessages")
+  receivedMessages ChatMessage[]   @relation("ReceivedMessages")
+  personalRecords PersonalRecord[]
+
+  @@index([trainerId])
+}
+
+// ─── Training ───────────────────────────────────────────
+model Training {
+  id        Int        @id @default(autoincrement())
+  title     String
+  duration  Int
+  level     String
+  category  String
+  createdAt DateTime   @default(now())
+
+  exercises Exercise[]
+  schedules Schedule[]
+}
+
+model Exercise {
+  id         Int      @id @default(autoincrement())
+  trainingId Int
+  training   Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  name       String
+  reps       String
+  rest       String
+
+  @@index([trainingId])
+}
+
+// ─── Nutrition ──────────────────────────────────────────
+model NutritionPlan {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  title        String
+  updatedBy    String
+  updatedAt    DateTime @default(now())
+  dailyTargets Json     // { calories, protein, carbs, fat }
+  isCurrent    Boolean  @default(false)
+
+  meals Meal[]
+
+  @@index([userId])
+}
+
+model Meal {
+  id              Int           @id @default(autoincrement())
+  nutritionPlanId Int
+  nutritionPlan   NutritionPlan @relation(fields: [nutritionPlanId], references: [id], onDelete: Cascade)
+  name            String
+  time            String
+  emoji           String?
+
+  items MealItem[]
+
+  @@index([nutritionPlanId])
+}
+
+model MealItem {
+  id       Int    @id @default(autoincrement())
+  mealId   Int
+  meal     Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  name     String
+  calories Int
+  protein  Float
+  carbs    Float
+  fat      Float
+
+  @@index([mealId])
+}
+
+model DiaryEntry {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  date        DateTime
+  mealSlot    String
+  description String
+  calories    Int
+  protein     Float
+  carbs       Float
+  fat         Float
+  time        String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Schedule ───────────────────────────────────────────
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  trainingId Int
+  training   Training @relation(fields: [trainingId], references: [id])
+  date       DateTime
+  time       String
+  title      String
+  done       Boolean  @default(false)
+
+  @@index([userId])
+  @@index([trainingId])
+}
+
+// ─── Assessment ─────────────────────────────────────────
+model Assessment {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  date         DateTime
+  weight       Float
+  fatPercent   Float?
+  leanMass     Float?
+  fatMass      Float?
+  measurements Json?    // { waist, hip, chest, rightArm, ... }
+  skinfolds    Json?    // { triceps, subscapular, ... }
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─── Anamnesis ──────────────────────────────────────────
+model Anamnesis {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  filledAt         DateTime @default(now())
+  personalInfo     Json
+  healthHistory    Json
+  physicalActivity Json
+  dietaryProfile   Json
+  goals            Json
+  trainerNotes     String?
+  isCurrent        Boolean  @default(false)
+
+  @@index([userId])
+}
+
+// ─── Chat ───────────────────────────────────────────────
+model ChatMessage {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId Int
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  text       String
+  time       DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+// ─── Progress / Personal Records ────────────────────────
+model PersonalRecord {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  exercise    String
+  category    String
+  value       String
+  date        DateTime
+  improvement String?
+
+  @@index([userId])
 }
