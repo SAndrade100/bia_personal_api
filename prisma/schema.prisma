@@ -65,8 +65,20 @@ model Exercise {
   name       String
   reps       String
   rest       String
+  description String?
+  videoUrl    String?
 
   @@index([trainingId])
+}
+
+// ─── Exercise Library ───────────────────────────────────
+model ExerciseLibrary {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  videoUrl    String?
+  category    String?
+  createdAt   DateTime @default(now())
 }
 
 // ─── Nutrition ──────────────────────────────────────────

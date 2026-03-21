@@ -5,8 +5,17 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ScheduleService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(userId: number, month?: string) {
-    const where: any = { userId };
+  async findAll(userId: number, role: string, month?: string) {
+    const where: any = {};
+    if (role === 'trainer') {
+      const students = await this.prisma.user.findMany({
+        where: { trainerId: userId },
+        select: { id: true },
+      });
+      where.userId = { in: students.map((s) => s.id) };
+    } else {
+      where.userId = userId;
+    }
     if (month) {
       const [y, m] = month.split('-').map(Number);
       where.date = {
@@ -14,7 +23,11 @@ export class ScheduleService {
         lt: new Date(y, m, 1),
       };
     }
-    return this.prisma.schedule.findMany({ where, orderBy: { date: 'asc' } });
+    const rows = await this.prisma.schedule.findMany({ where, orderBy: { date: 'asc' } });
+    return rows.map((s) => ({
+      ...s,
+      date: (s.date instanceof Date ? s.date : new Date(s.date)).toISOString().slice(0, 10),
+    }));
   }
 
   create(data: any) {
@@ -26,13 +39,20 @@ export class ScheduleService {
         time: data.time,
         title: data.title,
       },
-    });
+    }).then((s) => ({
+      ...s,
+      date: (s.date instanceof Date ? s.date : new Date(s.date)).toISOString().slice(0, 10),
+    }));
   }
 
   async update(id: number, data: any) {
     const exists = await this.prisma.schedule.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('Schedule not found');
-    return this.prisma.schedule.update({ where: { id }, data });
+    const updated = await this.prisma.schedule.update({ where: { id }, data });
+    return {
+      ...updated,
+      date: (updated.date instanceof Date ? updated.date : new Date(updated.date)).toISOString().slice(0, 10),
+    };
   }
 
   async remove(id: number) {

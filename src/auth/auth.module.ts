@@ -12,7 +12,11 @@ import { PrismaModule } from '../prisma/prisma.module';
     PassportModule,
     JwtModule.registerAsync({
       useFactory: async () => ({
-        secret: process.env.JWT_SECRET || 'change_this_secret',
+        secret: (() => {
+          const s = process.env.JWT_SECRET;
+          if (!s) throw new Error('JWT_SECRET environment variable is required');
+          return s;
+        })(),
         signOptions: { expiresIn: '12h' },
       }),
     }),

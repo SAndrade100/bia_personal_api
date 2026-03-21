@@ -10,7 +10,7 @@ export class ScheduleController {
 
   @Get()
   findAll(@Req() req: any, @Query('month') month?: string) {
-    return this.service.findAll(req.user.id, month);
+    return this.service.findAll(req.user.id, req.user.role, month);
   }
 
   @Post()

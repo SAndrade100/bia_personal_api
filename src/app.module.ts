@@ -12,6 +12,7 @@ import { AnamnesisModule } from './anamnesis/anamnesis.module';
 import { ChatModule } from './chat/chat.module';
 import { ProgressModule } from './progress/progress.module';
 import { TrainerStudentsModule } from './trainer-students/trainer-students.module';
+import { ExerciseLibraryModule } from './exercise-library/exercise-library.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TrainerStudentsModule } from './trainer-students/trainer-students.modul
     ChatModule,
     ProgressModule,
     TrainerStudentsModule,
+    ExerciseLibraryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

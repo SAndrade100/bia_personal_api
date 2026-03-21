@@ -6,14 +6,47 @@ export class ChatService {
   constructor(private prisma: PrismaService) {}
 
   async getMessages(userId: number, role: string, studentId?: string) {
-    const targetUserId = role === 'trainer' && studentId ? +studentId : userId;
+    const parseId = (v: any): number | null => {
+      if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+      if (!v) return null;
+      const s = String(v);
+      // try plain numeric
+      if (/^-?\d+$/.test(s)) return Number(s);
+      // extract digits (handles values like "u1")
+      const digits = s.replace(/\D/g, '');
+      if (!digits) return null;
+      const n = Number(digits);
+      return Number.isFinite(n) ? n : null;
+    };
 
-    // get messages where user is sender or receiver with the counterpart
+    const userNum = parseId(userId);
+    const studentNum = role === 'trainer' && studentId ? parseId(studentId) : null;
+
+    if (!userNum) {
+      return [];
+    }
+
+    let participantA = userNum;
+    let participantB: number;
+
+    if (role === 'trainer' && studentNum) {
+      participantB = studentNum;
+    } else {
+      // Student: find their trainer
+      const student = await this.prisma.user.findUnique({
+        where: { id: userNum },
+        select: { trainerId: true },
+      });
+      if (!student?.trainerId) return [];
+      participantB = student.trainerId;
+    }
+
+    // Get messages where both participants are involved
     const messages = await this.prisma.chatMessage.findMany({
       where: {
         OR: [
-          { senderId: targetUserId },
-          { receiverId: targetUserId },
+          { senderId: participantA, receiverId: participantB },
+          { senderId: participantB, receiverId: participantA },
         ],
       },
       orderBy: { time: 'asc' },
@@ -32,7 +65,17 @@ export class ChatService {
 
   async sendMessage(senderId: number, senderRole: string, data: any) {
     // find the counterpart
-    const studentUserId = +data.studentId;
+    const parseId = (v: any): number => {
+      if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+      if (!v) return 0;
+      const s = String(v);
+      if (/^-?\d+$/.test(s)) return Number(s);
+      const digits = s.replace(/\D/g, '');
+      const n = Number(digits || 0);
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const studentUserId = parseId(data.studentId);
     let receiverId: number;
 
     if (senderRole === 'trainer') {
@@ -59,6 +102,7 @@ export class ChatService {
       from: senderRole,
       text: msg.text,
       time: msg.time,
+      receiverId,
     };
   }
 }

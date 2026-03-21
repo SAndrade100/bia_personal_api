@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { AssessmentService } from './assessment.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard, Roles } from '../auth/roles.guard';
@@ -28,5 +28,12 @@ export class AssessmentController {
   @Roles('trainer')
   update(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
     return this.service.update(id, body);
+  }
+
+  @Delete(':id')
+  @Roles('trainer')
+  @HttpCode(204)
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.service.remove(id);
   }
 }

@@ -9,8 +9,9 @@ export class NutritionController {
   constructor(private readonly service: NutritionService) {}
 
   @Get()
-  getAll(@Req() req: any, @Query('section') section?: string) {
-    return this.service.getAll(req.user.id, section);
+  getAll(@Req() req: any, @Query('section') section?: string, @Query('studentId') studentId?: string) {
+    const userId = studentId && req.user.role === 'trainer' ? +studentId : req.user.id;
+    return this.service.getAll(userId, section);
   }
 
   @Put('plan')
