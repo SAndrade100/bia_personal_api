@@ -38,6 +38,7 @@ model User {
   nutritionPlans  NutritionPlan[]
   diaryEntries    DiaryEntry[]
   schedules       Schedule[]
+  weeklySchedules WeeklySchedule[]
   sentMessages    ChatMessage[]    @relation("SentMessages")
   receivedMessages ChatMessage[]   @relation("ReceivedMessages")
   personalRecords PersonalRecord[]
@@ -56,6 +57,7 @@ model Training {
 
   exercises Exercise[]
   schedules Schedule[]
+  sheetDays TrainingSheetDay[]
 }
 
 model Exercise {
@@ -69,6 +71,44 @@ model Exercise {
   videoUrl    String?
 
   @@index([trainingId])
+}
+
+// ─── Training Sheet (Ficha Semanal) ─────────────────────
+model TrainingSheet {
+  id        Int      @id @default(autoincrement())
+  title     String
+  createdAt DateTime @default(now())
+
+  days            TrainingSheetDay[]
+  weeklySchedules WeeklySchedule[]
+}
+
+model TrainingSheetDay {
+  id              Int           @id @default(autoincrement())
+  trainingSheetId Int
+  trainingSheet   TrainingSheet @relation(fields: [trainingSheetId], references: [id], onDelete: Cascade)
+  trainingId      Int
+  training        Training      @relation(fields: [trainingId], references: [id])
+  weekdays        Int[]         // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+
+  @@index([trainingSheetId])
+  @@index([trainingId])
+}
+
+model WeeklySchedule {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
+  trainingSheetId Int
+  trainingSheet   TrainingSheet @relation(fields: [trainingSheetId], references: [id])
+  weekStart       DateTime      // Monday of the first week
+  recurrenceWeeks Int           @default(1)
+  createdAt       DateTime      @default(now())
+
+  schedules Schedule[]
+
+  @@index([userId])
+  @@index([trainingSheetId])
 }
 
 // ─── Exercise Library ───────────────────────────────────
@@ -152,8 +192,12 @@ model Schedule {
   title      String
   done       Boolean  @default(false)
 
+  weeklyScheduleId Int?
+  weeklySchedule   WeeklySchedule? @relation(fields: [weeklyScheduleId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([trainingId])
+  @@index([weeklyScheduleId])
 }
 
 // ─── Assessment ─────────────────────────────────────────

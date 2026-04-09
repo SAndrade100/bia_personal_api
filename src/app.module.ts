@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TrainingModule } from './training/training.module';
+import { TrainingSheetModule } from './training-sheet/training-sheet.module';
 import { NutritionModule } from './nutrition/nutrition.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { AssessmentModule } from './assessment/assessment.module';
@@ -20,6 +21,7 @@ import { ExerciseLibraryModule } from './exercise-library/exercise-library.modul
     AuthModule,
     UserModule,
     TrainingModule,
+    TrainingSheetModule,
     NutritionModule,
     ScheduleModule,
     AssessmentModule,

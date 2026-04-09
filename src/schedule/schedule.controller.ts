@@ -19,6 +19,24 @@ export class ScheduleController {
     return this.service.create(body);
   }
 
+  @Post('weekly')
+  @Roles('trainer')
+  createWeekly(@Body() body: any) {
+    return this.service.createWeekly(body);
+  }
+
+  @Get('weekly')
+  findWeeklySchedules(@Req() req: any) {
+    return this.service.findWeeklySchedules(req.user.id, req.user.role);
+  }
+
+  @Delete('weekly/:id')
+  @Roles('trainer')
+  @HttpCode(204)
+  async removeWeekly(@Param('id', ParseIntPipe) id: number) {
+    await this.service.removeWeekly(id);
+  }
+
   @Patch(':id')
   update(@Param('id', ParseIntPipe) id: number, @Body() body: any) {
     return this.service.update(id, body);
