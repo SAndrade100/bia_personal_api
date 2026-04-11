@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: personal
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 08012022
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # The application is intended to run locally (outside Docker).
+  # Only the Postgres service remains in this Compose file so the app can connect
+  # to the DB at localhost:5432 when run on the host machine.
+
+volumes:
+  db_data:
