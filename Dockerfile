@@ -5,6 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
 COPY prisma.config.mjs ./
+ARG BUILD_DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build_db"
+ENV DATABASE_URL=$BUILD_DATABASE_URL
 RUN npm ci
 
 # copy sources and build
