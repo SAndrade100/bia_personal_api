@@ -3,6 +3,8 @@ WORKDIR /app
 
 # install deps (including dev deps so Prisma CLI is available at runtime)
 COPY package*.json ./
+COPY prisma ./prisma
+COPY prisma.config.mjs ./
 RUN npm ci
 
 # copy sources and build
